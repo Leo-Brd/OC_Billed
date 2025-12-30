@@ -7,8 +7,10 @@ import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
 import { ROUTES_PATH} from "../constants/routes.js";
 import {localStorageMock} from "../__mocks__/localStorage.js";
-
+import mockStore from "../__mocks__/store.js"
+import Bills from "../containers/Bills.js"
 import router from "../app/Router.js";
+import '@testing-library/jest-dom'
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -35,5 +37,28 @@ describe("Given I am connected as an employee", () => {
       const datesSorted = [...dates].sort(antiChrono)
       expect(dates).toEqual(datesSorted)
     })
+
+    describe("When I click on the new bill button", () => {
+      test("Then it should navigate to NewBill page", () => {
+        const onNavigate = jest.fn()
+        const billsContainer = new Bills({
+          document,
+          onNavigate,
+          store: null,
+          localStorage: window.localStorage
+        })
+
+        const handleClickNewBill = jest.fn(billsContainer.handleClickNewBill)
+        const newBillBtn = document.querySelector(`button[data-testid="btn-new-bill"]`)
+        
+        if (newBillBtn) {
+          newBillBtn.addEventListener('click', handleClickNewBill)
+          newBillBtn.click()
+          expect(handleClickNewBill).toHaveBeenCalled()
+          expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH['NewBill'])
+        }
+      })
+    })
+
   })
 })

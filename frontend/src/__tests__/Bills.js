@@ -160,3 +160,61 @@ describe("Given I am a user connected as Employee", () => {
 
   })
 })
+
+// GET Bills unit tests
+describe("Given I am connected as Employee", () => {
+  describe("When I call getBills method", () => {
+    test("Then it should return formatted bills", async () => {
+      jest.restoreAllMocks()
+      
+      const billsContainer = new Bills({
+        document,
+        onNavigate: jest.fn(),
+        store: mockStore,
+        localStorage: window.localStorage
+      })
+
+      const result = await billsContainer.getBills()
+      
+      expect(result.length).toBe(4)
+      expect(result[0].date).toBe("4 Avr. 04")
+      expect(result[0].status).toBe("En attente")
+      expect(result[1].date).toBe("1 Jan. 01")
+      expect(result[1].status).toBe("Refused")
+    })
+
+    test("Then it should handle corrupted date and log error", async () => {
+      const corruptedStore = {
+        bills() {
+          return {
+            list() {
+              return Promise.resolve([
+                {
+                  id: "1",
+                  date: "invalid-date",
+                  status: "pending",
+                  name: "Test"
+                }
+              ])
+            }
+          }
+        }
+      }
+
+      const billsContainer = new Bills({
+        document,
+        onNavigate: jest.fn(),
+        store: corruptedStore,
+        localStorage: window.localStorage
+      })
+
+      const consoleSpy = jest.spyOn(console, 'log')
+      const result = await billsContainer.getBills()
+      
+      expect(result.length).toBe(1)
+      expect(result[0].date).toBe("invalid-date")
+      expect(result[0].status).toBe("En attente")
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+  })
+})

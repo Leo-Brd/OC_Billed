@@ -71,4 +71,42 @@ describe("Given I am connected as an employee", () => {
       expect(handleChangeFile).toHaveBeenCalled()
     })
   })
+
+  describe("When I submit the form with valid data", () => {
+    test("Then it should call handleSubmit and navigate to Bills", () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'employee@test.com'
+      }))
+
+      document.body.innerHTML = NewBillUI()
+
+      const onNavigate = jest.fn()
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage
+      })
+
+      const handleSubmit = jest.fn(newBill.handleSubmit)
+      const form = screen.getByTestId("form-new-bill")
+      
+      form.addEventListener("submit", handleSubmit)
+
+      fireEvent.change(screen.getByTestId("expense-type"), { target: { value: 'Transports' } })
+      fireEvent.change(screen.getByTestId("expense-name"), { target: { value: 'Vol Paris Londres' } })
+      fireEvent.change(screen.getByTestId("datepicker"), { target: { value: '2024-12-30' } })
+      fireEvent.change(screen.getByTestId("amount"), { target: { value: '350' } })
+      fireEvent.change(screen.getByTestId("vat"), { target: { value: '70' } })
+      fireEvent.change(screen.getByTestId("pct"), { target: { value: '20' } })
+      fireEvent.change(screen.getByTestId("commentary"), { target: { value: 'Test commentary' } })
+
+      fireEvent.submit(form)
+
+      expect(handleSubmit).toHaveBeenCalled()
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH['Bills'])
+    })
+  })
 })

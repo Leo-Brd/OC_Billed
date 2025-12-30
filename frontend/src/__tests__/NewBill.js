@@ -43,4 +43,32 @@ describe("Given I am connected as an employee", () => {
       expect(mailIcon.classList.contains('active-icon')).toBe(true)
     })
   })
+
+  describe("When I upload a file", () => {
+    test("Then handleChangeFile should be called", () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'employee@test.com'
+      }))
+
+      document.body.innerHTML = NewBillUI()
+
+      const onNavigate = jest.fn()
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage
+      })
+
+      const handleChangeFile = jest.fn(newBill.handleChangeFile)
+      const fileInput = screen.getByTestId("file")
+      fileInput.addEventListener("change", handleChangeFile)
+      
+      fireEvent.change(fileInput)
+
+      expect(handleChangeFile).toHaveBeenCalled()
+    })
+  })
 })

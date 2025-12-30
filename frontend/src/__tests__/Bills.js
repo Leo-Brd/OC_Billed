@@ -180,7 +180,7 @@ describe("Given I am connected as Employee", () => {
       expect(result[0].date).toBe("4 Avr. 04")
       expect(result[0].status).toBe("En attente")
       expect(result[1].date).toBe("1 Jan. 01")
-      expect(result[1].status).toBe("Refused")
+      expect(result[1].status).toBe("Refusé")
     })
 
     test("Then it should handle corrupted date and log error", async () => {

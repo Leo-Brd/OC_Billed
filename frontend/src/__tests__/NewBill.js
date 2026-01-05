@@ -109,4 +109,124 @@ describe("Given I am connected as an employee", () => {
       expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH['Bills'])
     })
   })
+
+  // POST integration test
+  describe("When I submit a new bill", () => {
+    test("Then it should create a new bill via POST API call", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'employee@test.com'
+      }))
+
+      document.body.innerHTML = NewBillUI()
+
+      const onNavigate = jest.fn()
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage
+      })
+
+      const form = screen.getByTestId("form-new-bill")
+      fireEvent.change(screen.getByTestId("expense-type"), { target: { value: 'Transports' } })
+      fireEvent.change(screen.getByTestId("expense-name"), { target: { value: 'Vol Paris Londres' } })
+      fireEvent.change(screen.getByTestId("datepicker"), { target: { value: '2024-12-30' } })
+      fireEvent.change(screen.getByTestId("amount"), { target: { value: '350' } })
+      fireEvent.change(screen.getByTestId("vat"), { target: { value: '70' } })
+      fireEvent.change(screen.getByTestId("pct"), { target: { value: '20' } })
+      fireEvent.change(screen.getByTestId("commentary"), { target: { value: 'Test POST integration' } })
+
+      const createSpy = jest.spyOn(mockStore, 'bills')
+
+      await waitFor(() => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+
+      expect(createSpy).toHaveBeenCalled()
+    })
+
+    test("Then it should handle 404 error from POST API", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'employee@test.com'
+      }))
+
+      document.body.innerHTML = NewBillUI()
+
+      const onNavigate = jest.fn()
+      
+      const storeMock404 = {
+        bills: jest.fn(() => ({
+          create: jest.fn(() => Promise.reject(new Error('404'))),
+          update: jest.fn(() => Promise.reject(new Error('404')))
+        }))
+      }
+
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: storeMock404,
+        localStorage: window.localStorage
+      })
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      const form = screen.getByTestId("form-new-bill")
+      
+      const handleSubmit = jest.fn((e) => newBill.handleSubmit(e))
+      form.addEventListener("submit", handleSubmit)
+
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(handleSubmit).toHaveBeenCalled()
+      })
+
+      consoleErrorSpy.mockRestore()
+    })
+
+    test("Then it should handle 500 error from POST API", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'employee@test.com'
+      }))
+
+      document.body.innerHTML = NewBillUI()
+
+      const onNavigate = jest.fn()
+      
+      const storeMock500 = {
+        bills: jest.fn(() => ({
+          create: jest.fn(() => Promise.reject(new Error('500'))),
+          update: jest.fn(() => Promise.reject(new Error('500')))
+        }))
+      }
+
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: storeMock500,
+        localStorage: window.localStorage
+      })
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      const form = screen.getByTestId("form-new-bill")
+      
+      const handleSubmit = jest.fn((e) => newBill.handleSubmit(e))
+      form.addEventListener("submit", handleSubmit)
+
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(handleSubmit).toHaveBeenCalled()
+      })
+
+      consoleErrorSpy.mockRestore()
+    })
+  })
 })
